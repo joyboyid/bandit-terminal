@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Bandit
+GenericName=Terminal
+Comment=Lightweight terminal with a file list and system HUD
+Exec=bandit
+Icon=bandit-terminal
+Terminal=true
+Categories=System;TerminalEmulator;
+Keywords=shell;terminal;bandit;
+StartupNotify=false
+TryExec=bandit
