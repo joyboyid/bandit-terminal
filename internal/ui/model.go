@@ -131,10 +131,6 @@ type Model struct {
 	gitBranch     string
 	gitDirty      bool
 	gitDir        string
-	findOn        bool
-	findQuery     string
-	findSaved     int
-	findHit       int
 }
 
 // New builds the screen. The shell starts when the program runs.
@@ -157,7 +153,6 @@ func New() *Model {
 		showRight: true,
 		showIP:    true,
 		blinkOn:   true,
-		findHit:   -1,
 		focus:     focusTerm,
 		sampler:   sysinfo.New(),
 		home:      home,
@@ -312,7 +307,6 @@ func (m *Model) onKey(k tea.KeyMsg) tea.Cmd {
 		m.applyResize()
 		return nil
 	case "f1":
-		m.cancelFind()
 		if !m.lay.showRight {
 			m.showRight = true
 			m.applyResize()
@@ -328,17 +322,8 @@ func (m *Model) onKey(k tea.KeyMsg) tea.Cmd {
 		}
 		return nil
 	}
-	if m.findOn && m.focus == focusTerm {
-		return m.onFindKey(k)
-	}
 	if m.focus == focusFiles && m.lay.showRight {
 		return m.onFileKey(k)
-	}
-	if k.Type == tea.KeyRunes && !k.Alt && len(k.Runes) == 1 && k.Runes[0] == '/' {
-		if m.session.Emu != nil && !m.session.Emu.IsAltScreen() {
-			m.startFind()
-			return nil
-		}
 	}
 	switch k.String() {
 	case "ctrl+pgup":
@@ -480,43 +465,11 @@ func (m *Model) onMouse(msg tea.MouseMsg) tea.Cmd {
 	return nil
 }
 
-func (m *Model) onFindKey(k tea.KeyMsg) tea.Cmd {
-	switch k.String() {
-	case "esc", "ctrl+c":
-		m.cancelFind()
-		return nil
-	case "enter":
-		m.findOn = false
-		return nil
-	case "backspace":
-		r := []rune(m.findQuery)
-		if len(r) > 0 {
-			m.findQuery = string(r[:len(r)-1])
-		}
-		m.jumpFind()
-		return nil
-	case "up", "ctrl+p":
-		m.stepFind(-1)
-		return nil
-	case "down", "ctrl+n":
-		m.stepFind(1)
-		return nil
-	}
-	if k.Type == tea.KeyRunes && !k.Alt && len(k.Runes) == 1 && k.Runes[0] >= 32 {
-		m.findQuery += string(k.Runes)
-		m.jumpFind()
-	}
-	return nil
-}
-
 func (m *Model) forwardKey(k tea.KeyMsg) {
 	if m.session == nil {
 		return
 	}
 	m.scroll = 0
-	m.findOn = false
-	m.findQuery = ""
-	m.findHit = -1
 	if k.Paste {
 		m.session.Paste(string(k.Runes))
 		return

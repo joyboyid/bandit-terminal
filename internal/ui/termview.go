@@ -3,16 +3,15 @@ package ui
 import (
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	uv "github.com/charmbracelet/ultraviolet"
 	"github.com/charmbracelet/x/vt"
 )
 
-func renderTerm(emu *vt.Emulator, scroll int, cursor bool, mark int) string {
+func renderTerm(emu *vt.Emulator, scroll int, cursor bool) string {
 	if emu == nil {
 		return ""
 	}
-	if (scroll <= 0 || emu.IsAltScreen()) && mark < 0 {
+	if scroll <= 0 || emu.IsAltScreen() {
 		return renderLive(emu, cursor)
 	}
 	h := emu.Height()
@@ -31,7 +30,6 @@ func renderTerm(emu *vt.Emulator, scroll int, cursor bool, mark int) string {
 	if start < 0 {
 		start = 0
 	}
-	w := emu.Width()
 	lines := make([]string, h)
 	for row := 0; row < h; row++ {
 		idx := start + row
@@ -46,20 +44,9 @@ func renderTerm(emu *vt.Emulator, scroll int, cursor bool, mark int) string {
 				rendered = screenLine(emu, y).Render()
 			}
 		}
-		if idx == mark && rendered != "" {
-			rendered = paintMatch(rendered, w)
-		}
 		lines[row] = rendered
 	}
 	return strings.Join(lines, "\n")
-}
-
-func paintMatch(s string, w int) string {
-	out := lipgloss.NewStyle().Reverse(true).Render(s)
-	if lipgloss.Width(out) != w {
-		return padANSI(out, w)
-	}
-	return out
 }
 
 func renderLive(emu *vt.Emulator, cursor bool) (out string) {

@@ -27,7 +27,6 @@ Keys
   F2         show or hide the side panels
   F3         show or hide this machine's IP addresses
   F4         privacy mode: hide IP, username, and home path
-  /          search scrollback (↑↓ next match, enter, esc)
   ^Q         quit
   ^PgUp      scroll back through shell output
   ^PgDn      scroll toward the live prompt

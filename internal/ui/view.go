@@ -114,17 +114,6 @@ func (m *Model) footerLine() string {
 	w := m.width
 	var left, right string
 	switch {
-	case m.findOn:
-		at, n := m.findCount()
-		left = " /" + m.findQuery
-		switch {
-		case m.findQuery == "":
-			right = "type  ↑↓ match  esc"
-		case n == 0:
-			right = "no match  esc"
-		default:
-			right = fmt.Sprintf("%d/%d  ↑↓  enter  esc", at, n)
-		}
 	case m.dead:
 		left = " shell ended — q quit "
 		if ee, ok := m.deadErr.(*exec.ExitError); ok && ee.ExitCode() != 0 {
@@ -133,18 +122,16 @@ func (m *Model) footerLine() string {
 	case m.focus == focusFiles:
 		left = " ↑↓ move  enter open  c cd  p paste  . hidden  s sync  esc back "
 	default:
-		left = " F1 files  F2 panel  F3 ip  F4 priv  / find  ^Q quit "
+		left = " F1 files  F2 panel  F3 ip  F4 priv  ^Q quit "
 	}
-	if m.privacy && !m.findOn && !m.dead {
+	if m.privacy && !m.dead {
 		left = " PRIV  " + strings.TrimLeft(left, " ")
 	}
-	if !m.findOn {
-		if m.scroll > 0 {
-			right = fmt.Sprintf("SCROLL %d", m.scroll)
-		} else if m.stats.MemTotal > 0 {
-			mem := float64(m.stats.MemUsed) / float64(m.stats.MemTotal) * 100
-			right = fmt.Sprintf("CPU %3.0f%%  MEM %3.0f%%", m.stats.CPUPercent, mem)
-		}
+	if m.scroll > 0 {
+		right = fmt.Sprintf("SCROLL %d", m.scroll)
+	} else if m.stats.MemTotal > 0 {
+		mem := float64(m.stats.MemUsed) / float64(m.stats.MemTotal) * 100
+		right = fmt.Sprintf("CPU %3.0f%%  MEM %3.0f%%", m.stats.CPUPercent, mem)
 	}
 	color := colMuted
 	if m.dead {
@@ -166,11 +153,7 @@ func (m *Model) termInner() (title, body string) {
 		return title, centerBlock("starting shell…", w, h)
 	}
 	showCursor := m.focus == focusTerm && !m.cursorHidden && m.blinkOn && m.scroll == 0 && !m.dead
-	mark := -1
-	if m.findHit >= 0 && m.findQuery != "" {
-		mark = m.findHit
-	}
-	return title, renderTerm(m.session.Emu, m.scroll, showCursor, mark)
+	return title, renderTerm(m.session.Emu, m.scroll, showCursor)
 }
 
 func centerBlock(msg string, w, h int) string {

@@ -123,41 +123,6 @@ func TestPrivacyAndGit(t *testing.T) {
 	}
 }
 
-func TestScrollbackSearch(t *testing.T) {
-	m := sampleModel(t, true)
-	var b strings.Builder
-	for i := 0; i < 40; i++ {
-		fmt.Fprintf(&b, "row-%02d\r\n", i)
-	}
-	b.WriteString("NEEDLE-bandit\r\n")
-	for i := 0; i < 30; i++ {
-		fmt.Fprintf(&b, "tail-%02d\r\n", i)
-	}
-	if _, err := m.session.Emu.Write([]byte(b.String())); err != nil {
-		t.Fatal(err)
-	}
-	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
-	if !m.findOn {
-		t.Fatal("slash should open search")
-	}
-	for _, r := range "NEEDLE" {
-		m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{r}})
-	}
-	if m.scroll == 0 || m.findHit < 0 {
-		t.Fatalf("scroll %d hit %d", m.scroll, m.findHit)
-	}
-	plain := stripANSI(m.View())
-	if !strings.Contains(plain, "NEEDLE-bandit") {
-		t.Fatalf("match not on screen:\n%s", plain)
-	}
-	assertGeometry(t, m)
-	saved := m.scroll
-	m.Update(tea.KeyMsg{Type: tea.KeyEsc})
-	if m.findOn || m.scroll != 0 {
-		t.Fatalf("esc on=%v scroll=%d saved=%d", m.findOn, m.scroll, saved)
-	}
-}
-
 func assertGeometry(t *testing.T, m *Model) {
 	t.Helper()
 	view := m.View()
@@ -257,14 +222,14 @@ func TestScrollbackShowsEarlierLine(t *testing.T) {
 		fmt.Fprintf(&b, "line-%02d\r\n", i)
 	}
 	_, _ = emu.Write([]byte(b.String()))
-	live := stripANSI(renderTerm(emu, 0, false, -1))
+	live := stripANSI(renderTerm(emu, 0, false))
 	if !strings.Contains(live, "line-11") {
 		t.Fatalf("live view:\n%s", live)
 	}
 	if emu.ScrollbackLen() == 0 {
 		t.Fatal("expected scrollback")
 	}
-	older := stripANSI(renderTerm(emu, emu.ScrollbackLen(), false, -1))
+	older := stripANSI(renderTerm(emu, emu.ScrollbackLen(), false))
 	if !strings.Contains(older, "line-00") {
 		t.Fatalf("scrolled view:\n%s", older)
 	}
